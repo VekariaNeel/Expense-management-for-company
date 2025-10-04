@@ -194,17 +194,6 @@ The frontend is configured to connect to `http://localhost:5000` for API calls. 
 4. **No Password Recovery**: Admin must reset passwords
 5. **Single Company Context**: No multi-tenancy features beyond company isolation
 
-## 🔜 Future Enhancements (Not Implemented)
-
-- Expense submission and tracking
-- Approval workflow execution
-- Expense reports and analytics
-- File attachments
-- Real database integration
-- Email service integration
-- Password strength requirements
-- Audit logs
-
 ## 📝 License
 
 This project is for demonstration purposes.
