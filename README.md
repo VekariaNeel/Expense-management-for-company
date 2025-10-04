@@ -4,19 +4,32 @@ A full-stack expense management system with company signup, user management, and
 
 ## 🎯 Features
 
-### Implemented (Admin Pages)
+### Implemented
 - **Company Signup**: Register company with admin account
 - **User Authentication**: JWT-based login/logout
-- **User Management**: 
+- **User Management** (Admin): 
   - Add employees and managers
   - Assign/change roles
   - Assign/change managers
   - Generate and resend passwords
-- **Approval Rules**:
+- **Approval Rules** (Admin):
   - Configure approval workflows per employee
   - Set managers and approvers
   - Define sequential/parallel approval
   - Set minimum approval percentages
+- **Expense Management** (Employee):
+  - Submit expense claims with amount, category, description, date
+  - Multi-currency support (USD, EUR, INR, CAD, GBP, AUD, JPY)
+  - Upload and attach receipt images
+  - View expense history (Draft, Waiting Approval, Approved, Rejected)
+  - Edit draft expenses
+  - View rejection details and reasons
+- **Expense Approval** (Manager):
+  - View pending expenses from team members
+  - Approve or reject expenses with comments
+  - Multi-currency conversion to company currency
+  - Budget tracking and enforcement
+  - View all team expense history
 
 ## 🛠️ Tech Stack
 
@@ -93,6 +106,17 @@ The frontend will run on `http://localhost:3000`
 - `GET /api/approval-rules/:userId` - Get rule for specific user
 - `POST /api/approval-rules` - Create/update approval rule
 
+### Expenses
+- `GET /api/expenses/my-expenses` - Get logged-in user's expenses (Employee)
+- `GET /api/expenses/pending` - Get pending expenses for approval (Manager)
+- `GET /api/expenses/team-expenses` - Get all team expenses (Manager)
+- `POST /api/expenses` - Create new expense (Employee)
+- `PUT /api/expenses/:id` - Update expense (Employee, own expenses only)
+- `PUT /api/expenses/:id/approve` - Approve expense (Manager)
+- `PUT /api/expenses/:id/reject` - Reject expense (Manager)
+- `POST /api/expenses/receipts` - Upload receipt (Employee)
+- `GET /api/expenses/receipts` - Get user's receipts (Employee)
+
 ## 🔐 Authentication
 
 The system uses JWT tokens for authentication:
@@ -107,6 +131,8 @@ All data is stored **in-memory** using JavaScript arrays/objects:
 - **Companies**: Company information with country and currency
 - **Users**: User accounts with roles (Admin/Manager/Employee)
 - **Approval Rules**: Approval workflow configurations
+- **Expenses**: Employee expense claims with status tracking
+- **Receipts**: Base64-encoded receipt images
 
 **⚠️ Important**: Data will be **lost on server restart**. This is intentional for development/demo purposes.
 
@@ -136,7 +162,7 @@ Temporary Password: Abc123XYZ!@#
 
 2. **Login** (`/login`)
    - Email and password authentication
-   - Redirects to admin dashboard on success
+   - Redirects to appropriate dashboard based on role
 
 3. **User Management** (`/admin/users`)
    - Table view of all users
@@ -151,6 +177,22 @@ Temporary Password: Abc123XYZ!@#
    - Set approval type (Sequential/Parallel)
    - Define minimum approval percentage
    - View existing rules
+
+5. **Employee Dashboard** (`/employee/dashboard`)
+   - Submit expense claims with multi-currency support
+   - Upload receipt images with OCR preview
+   - View expense history with filters (All, Draft, Waiting Approval, Approved, Rejected)
+   - Edit draft expenses
+   - Search and sort expenses
+   - View rejection details
+
+6. **Manager Dashboard** (`/manager/dashboard`)
+   - View pending expense approvals from team
+   - Approve/reject expenses with comments
+   - Multi-currency conversion display
+   - Budget tracking and enforcement
+   - Team expense history
+   - Real-time budget utilization charts
 
 ## 🔧 Configuration
 
@@ -171,6 +213,8 @@ The frontend is configured to connect to `http://localhost:5000` for API calls. 
 2. **Login**: Sign in with admin credentials at `/login`
 3. **Add Users**: Navigate to User Management and add employees/managers
 4. **Configure Rules**: Set up approval rules for employees
+5. **Employee Flow**: Login as employee → Submit expenses → Upload receipts
+6. **Manager Flow**: Login as manager → Review pending expenses → Approve/Reject
 
 ### Sample Test Data:
 

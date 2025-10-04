@@ -5,17 +5,20 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users');
 const approvalRulesRoutes = require('./routes/approvalRules');
+const expensesRoutes = require('./routes/expenses');
 
 const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increased limit for receipt images
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/approval-rules', approvalRulesRoutes);
+app.use('/api/expenses', expensesRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

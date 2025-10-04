@@ -15,8 +15,11 @@ const ManagerDashboard = () => {
   const [confirmAction, setConfirmAction] = useState(null);
   const [comment, setComment] = useState('');
   const [toasts, setToasts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { user, company, logout } = useAuth();
   const navigate = useNavigate();
+
+  const API_URL = 'http://localhost:5000/api';
 
   // Simple toast system
   const pushToast = (msg, type = 'info') => {
@@ -30,48 +33,43 @@ const ManagerDashboard = () => {
       setCompanyCurrency(company.currency || 'USD');
       fetchExchangeRates(company.currency || 'USD');
     }
-
-    // Mock data for now - replace with API calls
-    setExpenses([
-      {
-        id: 1,
-        subject: 'Client Dinner at The Grand Hotel',
-        requestOwner: 'John Doe',
-        employeeId: 'EMP001',
-        teamName: 'Sales',
-        category: 'Food & Beverage',
-        amount: 15000,
-        currency: 'INR',
-        date: '2025-10-01',
-        status: 'pending',
-        description: 'Business dinner with potential clients',
-        isManagerApprover: true,
-        currentApproverStep: 1,
-        approvalSequence: ['Manager', 'Finance', 'Director']
-      },
-      {
-        id: 2,
-        subject: 'Flight to Mumbai for Conference',
-        requestOwner: 'Sarah Smith',
-        employeeId: 'EMP002',
-        teamName: 'Engineering',
-        category: 'Travel',
-        amount: 450,
-        currency: 'USD',
-        date: '2025-09-28',
-        status: 'pending',
-        description: 'Annual tech conference attendance',
-        isManagerApprover: true,
-        currentApproverStep: 1,
-        approvalSequence: ['Manager', 'Finance']
-      }
-    ]);
-
+    fetchExpenses();
+    // Mock team budgets - in real app, this would come from API
     setTeamBudgets([
       { team: 'Engineering', budget: 50000, spent: 32500, currency: 'USD', leader: user?.name || 'Manager', employees: [] },
       { team: 'Sales', budget: 75000, spent: 68200, currency: 'USD', leader: user?.name || 'Manager', employees: [] }
     ]);
   }, [company, user]);
+
+  const fetchExpenses = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/expenses/team-expenses`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Map to expected format
+        const mappedExpenses = data.map(exp => ({
+          ...exp,
+          subject: exp.description,
+          teamName: exp.category, // Using category as team for now
+          status: exp.status === 'Waiting Approval' ? 'pending' : exp.status.toLowerCase()
+        }));
+        setExpenses(mappedExpenses);
+      } else {
+        console.error('Failed to fetch expenses');
+      }
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchExchangeRates = async (baseCurrency) => {
     try {
@@ -107,7 +105,7 @@ const ManagerDashboard = () => {
     }
   };
 
-  const handleApprove = (expenseId) => {
+  const handleApprove = async (expenseId) => {
     const expense = expenses.find(e => e.id === expenseId);
     if (!expense) return;
     const convertedAmount = convertToCompanyCurrency(expense.amount, expense.currency);
@@ -121,63 +119,67 @@ const ManagerDashboard = () => {
     const remaining = team.budget - team.spent;
     if (convertedAmount > remaining) {
       pushToast(`Budget limit exceeded for ${expense.teamName}. Auto-rejecting.`, 'error');
-      setExpenses(prev => prev.map(exp =>
-        exp.id === expenseId
-          ? {
-              ...exp,
-              status: 'rejected',
-              rejectedBy: 'Manager',
-              rejectionDate: new Date().toISOString().split('T')[0],
-              rejectionReason: 'Budget exceeded'
-            }
-          : exp
-      ));
-      setComment('');
-      setConfirmAction(null);
-      setSelectedExpense(null);
+      await handleReject(expenseId, 'Budget exceeded');
       return;
     }
 
-    setTeamBudgets(prev => prev.map(t =>
-      t.team === expense.teamName ? { ...t, spent: t.spent + convertedAmount } : t
-    ));
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/expenses/${expenseId}/approve`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ comment })
+      });
 
-    setExpenses(prev => prev.map(exp =>
-      exp.id === expenseId
-        ? {
-            ...exp,
-            status: 'approved',
-            approvedBy: 'Manager',
-            approvalDate: new Date().toISOString().split('T')[0],
-            comment: comment
-          }
-        : exp
-    ));
+      if (response.ok) {
+        setTeamBudgets(prev => prev.map(t =>
+          t.team === expense.teamName ? { ...t, spent: t.spent + convertedAmount } : t
+        ));
 
-    setComment('');
-    setConfirmAction(null);
-    setSelectedExpense(null);
+        await fetchExpenses();
+        setComment('');
+        setConfirmAction(null);
+        setSelectedExpense(null);
 
-    const pct = (((team.spent + convertedAmount) / team.budget) * 100).toFixed(1);
-    pushToast(`Approved ✓ — ${expense.teamName} now at ${pct}% of budget.`, 'success');
+        const pct = (((team.spent + convertedAmount) / team.budget) * 100).toFixed(1);
+        pushToast(`Approved ✓ — ${expense.teamName} now at ${pct}% of budget.`, 'success');
+      } else {
+        pushToast('Failed to approve expense', 'error');
+      }
+    } catch (error) {
+      console.error('Error approving expense:', error);
+      pushToast('Error approving expense', 'error');
+    }
   };
 
-  const handleReject = (expenseId) => {
-    setExpenses(prev => prev.map(exp =>
-      exp.id === expenseId
-        ? {
-            ...exp,
-            status: 'rejected',
-            rejectedBy: 'Manager',
-            rejectionDate: new Date().toISOString().split('T')[0],
-            rejectionReason: comment || 'No reason provided'
-          }
-        : exp
-    ));
-    setComment('');
-    setConfirmAction(null);
-    setSelectedExpense(null);
-    pushToast('Expense rejected.', 'warning');
+  const handleReject = async (expenseId, reason = null) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/expenses/${expenseId}/reject`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ rejectionReason: reason || comment || 'No reason provided' })
+      });
+
+      if (response.ok) {
+        await fetchExpenses();
+        setComment('');
+        setConfirmAction(null);
+        setSelectedExpense(null);
+        pushToast('Expense rejected.', 'warning');
+      } else {
+        pushToast('Failed to reject expense', 'error');
+      }
+    } catch (error) {
+      console.error('Error rejecting expense:', error);
+      pushToast('Error rejecting expense', 'error');
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -343,6 +345,9 @@ const ManagerDashboard = () => {
               </div>
 
               <div className="flex-1 overflow-auto">
+                {loading ? (
+                  <div className="py-8 text-center text-gray-500">Loading expenses...</div>
+                ) : (
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b sticky top-0">
                     <tr>
@@ -447,9 +452,10 @@ const ManagerDashboard = () => {
                     })}
                   </tbody>
                 </table>
+                )}
               </div>
 
-              {filteredExpenses.length === 0 && (
+              {!loading && filteredExpenses.length === 0 && (
                 <div className="text-center py-8">
                   <FileText className="w-10 h-10 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500 text-sm">No expenses found</p>

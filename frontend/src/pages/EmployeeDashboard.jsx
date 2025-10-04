@@ -7,37 +7,9 @@ const EmployeeDashboard = () => {
   const { user, company, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Seed examples
-  const [expenses, setExpenses] = useState([
-    { 
-      id: 1, 
-      employee: user?.name || "Employee", 
-      description: "Team Lunch - Pizza Place", 
-      date: "2025-10-01", 
-      category: "Food", 
-      paidBy: "Personal Card", 
-      remarks: "Client wrap-up", 
-      amount: "45.20", 
-      currency: company?.currency || "USD", 
-      status: "Approved", 
-      receiptId: null 
-    },
-    { 
-      id: 2, 
-      employee: user?.name || "Employee", 
-      description: "Uber to Office", 
-      date: "2025-10-02", 
-      category: "Travel", 
-      paidBy: "Cash", 
-      remarks: "Late night shift", 
-      amount: "12.50", 
-      currency: company?.currency || "USD", 
-      status: "Waiting Approval", 
-      receiptId: null 
-    },
-  ]);
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Receipt library
   const [receipts, setReceipts] = useState([]);
 
   // Drawer state
@@ -69,6 +41,55 @@ const EmployeeDashboard = () => {
 
   const currencies = ["USD", "EUR", "INR", "CAD", "GBP", "AUD", "JPY"];
   const categories = ["Food", "Travel", "Office", "Other"];
+
+  const API_URL = 'http://localhost:5000/api';
+
+  // Fetch expenses on mount
+  useEffect(() => {
+    fetchExpenses();
+    fetchReceipts();
+  }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/expenses/my-expenses`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setExpenses(data);
+      } else {
+        console.error('Failed to fetch expenses');
+      }
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchReceipts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/expenses/receipts`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setReceipts(data);
+      }
+    } catch (error) {
+      console.error('Error fetching receipts:', error);
+    }
+  };
 
   // Utilities
   const fmtMoney = (amt, cur) => {
@@ -168,17 +189,38 @@ const EmployeeDashboard = () => {
     document.getElementById("receipt-input").click();
   };
 
-  const handleFiles = (e) => {
+  const handleFiles = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-    const readers = files.map(file => new Promise(res => {
-      const r = new FileReader();
-      r.onload = () => res({ id: Date.now() + Math.random(), name: file.name, dataUrl: r.result, addedAt: new Date().toISOString() });
-      r.readAsDataURL(file);
-    }));
-    Promise.all(readers).then(items => {
-      setReceipts(prev => [...items, ...prev]);
-    });
+    
+    const token = localStorage.getItem('token');
+    
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const response = await fetch(`${API_URL}/expenses/receipts`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              name: file.name,
+              dataUrl: reader.result
+            })
+          });
+          
+          if (response.ok) {
+            const receipt = await response.json();
+            setReceipts(prev => [receipt, ...prev]);
+          }
+        } catch (error) {
+          console.error('Error uploading receipt:', error);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
     e.target.value = "";
   };
 
@@ -201,38 +243,117 @@ const EmployeeDashboard = () => {
     setForm(p => ({ ...p, receiptId: null }));
   };
 
-  const saveDraft = () => {
+  const saveDraft = async () => {
     if (!form.description) {
       alert("Add a Description to save as Draft.");
       return;
     }
     setSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      const token = localStorage.getItem('token');
+      const payload = { ...form, status: "Draft" };
+      
       if (editingId) {
-        setExpenses(prev => prev.map(r => r.id === editingId ? { ...form, id: editingId, status: "Draft" } : r));
+        const response = await fetch(`${API_URL}/expenses/${editingId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+          await fetchExpenses();
+          closeDrawer();
+        } else {
+          const errorData = await response.json();
+          alert(`Failed to save draft: ${errorData.error || 'Unknown error'}`);
+          console.error('Save draft error:', errorData);
+        }
       } else {
-        setExpenses(prev => [{ ...form, id: Date.now(), status: "Draft" }, ...prev]);
+        const response = await fetch(`${API_URL}/expenses`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+          await fetchExpenses();
+          closeDrawer();
+        } else {
+          const errorData = await response.json();
+          alert(`Failed to save draft: ${errorData.error || 'Unknown error'}`);
+          console.error('Save draft error:', errorData);
+        }
       }
-      closeDrawer();
-    }, 400);
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      alert(`Error saving draft: ${error.message}`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const submitExpense = () => {
+  const submitExpense = async () => {
     if (!form.description || !form.amount || !form.date) {
       alert("Please fill Description, Amount and Date.");
       return;
     }
     setSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      const token = localStorage.getItem('token');
       const payload = { ...form, status: "Waiting Approval" };
+      console.log('Submitting expense:', payload);
+      
       if (editingId) {
-        setExpenses(prev => prev.map(r => r.id === editingId ? { ...payload, id: editingId } : r));
+        const response = await fetch(`${API_URL}/expenses/${editingId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+          await fetchExpenses();
+          closeDrawer();
+        } else {
+          const errorData = await response.json();
+          alert(`Failed to submit expense: ${errorData.error || 'Unknown error'}`);
+          console.error('Submit error:', errorData);
+        }
       } else {
-        payload.id = Date.now();
-        setExpenses(prev => [payload, ...prev]);
+        const response = await fetch(`${API_URL}/expenses`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+          await fetchExpenses();
+          closeDrawer();
+        } else {
+          const errorData = await response.json();
+          alert(`Failed to submit expense: ${errorData.error || 'Unknown error'}`);
+          console.error('Submit error:', errorData);
+        }
       }
-      closeDrawer();
-    }, 450);
+    } catch (error) {
+      console.error('Error submitting expense:', error);
+      alert(`Error submitting expense: ${error.message}`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const renderCurrencyChips = (map) => {
@@ -316,7 +437,7 @@ const EmployeeDashboard = () => {
               onChange={e => setStatusFilter(e.target.value)}
               className="px-3 py-2 rounded-lg border-2 border-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {["All", "Draft", "Waiting Approval", "Approved"].map(s => <option key={s}>{s}</option>)}
+              {["All", "Draft", "Waiting Approval", "Approved", "Rejected"].map(s => <option key={s}>{s}</option>)}
             </select>
             <div className="flex gap-1">
               <select
@@ -371,6 +492,9 @@ const EmployeeDashboard = () => {
             <span className="text-sm text-gray-600">Rows: {filtered.length}</span>
           </div>
 
+          {loading ? (
+            <div className="py-8 text-center text-gray-500">Loading expenses...</div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
@@ -414,6 +538,7 @@ const EmployeeDashboard = () => {
                         "px-2 py-1 rounded-full text-xs font-semibold " +
                         (row.status === "Approved" ? "bg-green-100 text-green-700 border border-green-300"
                           : row.status === "Waiting Approval" ? "bg-amber-100 text-amber-700 border border-amber-300"
+                          : row.status === "Rejected" ? "bg-red-100 text-red-700 border border-red-300"
                             : "bg-gray-100 text-gray-700 border border-gray-300")
                       }>
                         {row.status}
@@ -424,6 +549,7 @@ const EmployeeDashboard = () => {
               </tbody>
             </table>
           </div>
+          )}
         </div>
       </div>
 
@@ -551,6 +677,7 @@ const EmployeeDashboard = () => {
                       "px-2 py-1 rounded-full font-semibold " +
                       (form.status === "Approved" ? "bg-green-100 text-green-700"
                         : form.status === "Waiting Approval" ? "bg-amber-100 text-amber-700"
+                        : form.status === "Rejected" ? "bg-red-100 text-red-700"
                           : "bg-gray-100 text-gray-700")
                     }>{form.status}</span>
                     {ocrLoading && <span className="text-blue-600 animate-pulse">OCR filling…</span>}
@@ -614,6 +741,15 @@ const EmployeeDashboard = () => {
                 <p className="text-xs text-amber-600 mt-2 font-medium">
                   This expense is approved and should generally be read-only. (Editing disabled for Submit.)
                 </p>
+              )}
+              
+              {editingId && form.status === "Rejected" && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-xs font-semibold text-red-800">Rejection Details:</p>
+                  <p className="text-xs text-red-700 mt-1">Rejected by: {expenses.find(e => e.id === editingId)?.rejectedBy || 'Unknown'}</p>
+                  <p className="text-xs text-red-700">Date: {expenses.find(e => e.id === editingId)?.rejectionDate || 'N/A'}</p>
+                  <p className="text-xs text-red-700">Reason: {expenses.find(e => e.id === editingId)?.rejectionReason || 'No reason provided'}</p>
+                </div>
               )}
             </form>
           </div>
