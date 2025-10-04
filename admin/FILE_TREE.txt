@@ -1,0 +1,254 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║              EXPENSE MANAGEMENT SYSTEM - COMPLETE FILE TREE                   ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+📁 d:/Work/Projects/
+│
+├── 📄 README.md                         Main project documentation
+├── 📄 QUICKSTART.md                     Step-by-step setup guide
+├── 📄 SETUP_INSTRUCTIONS.txt            Quick reference for setup
+├── 📄 PROJECT_SUMMARY.md                Features and statistics
+├── 📄 ARCHITECTURE.md                   System architecture & diagrams
+├── 📄 TESTING_GUIDE.md                  Complete testing checklist
+├── 📄 FINAL_SUMMARY.md                  Project delivery summary
+├── 📄 FILE_TREE.txt                     This file
+├── 📄 .gitignore                        Root git ignore rules
+│
+├── 📁 backend/                          ⚙️ BACKEND APPLICATION
+│   │
+│   ├── 📄 app.js                        ⭐ Main Express server
+│   ├── 📄 package.json                  Backend dependencies
+│   ├── 📄 .env.example                  Environment variables template
+│   ├── 📄 .gitignore                    Backend git ignore
+│   │
+│   ├── 📁 data/                         💾 DATA STORAGE
+│   │   └── 📄 store.js                  In-memory storage arrays
+│   │
+│   ├── 📁 middleware/                   🔒 MIDDLEWARE
+│   │   └── 📄 auth.js                   JWT authentication & admin check
+│   │
+│   └── 📁 routes/                       🛣️ API ROUTES
+│       ├── 📄 auth.js                   Signup & login endpoints
+│       ├── 📄 users.js                  User management endpoints
+│       └── 📄 approvalRules.js          Approval rules endpoints
+│
+└── 📁 frontend/                         🎨 FRONTEND APPLICATION
+    │
+    ├── 📄 package.json                  Frontend dependencies
+    ├── 📄 tailwind.config.js            TailwindCSS configuration
+    ├── 📄 postcss.config.js             PostCSS configuration
+    ├── 📄 .gitignore                    Frontend git ignore
+    │
+    ├── 📁 public/                       🌐 PUBLIC ASSETS
+    │   └── 📄 index.html                HTML template
+    │
+    └── 📁 src/                          ⚛️ REACT SOURCE
+        │
+        ├── 📄 App.jsx                   ⭐ Main app component & routing
+        ├── 📄 index.js                  React entry point
+        ├── 📄 index.css                 Global styles & Tailwind imports
+        │
+        ├── 📁 context/                  🔄 STATE MANAGEMENT
+        │   └── 📄 AuthContext.jsx       Authentication context provider
+        │
+        ├── 📁 components/               🧩 REUSABLE COMPONENTS
+        │   ├── 📄 ProtectedRoute.jsx    Route protection wrapper
+        │   └── 📄 Navbar.jsx            Navigation bar component
+        │
+        └── 📁 pages/                    📄 PAGE COMPONENTS
+            ├── 📄 Signup.jsx            Company & admin signup page
+            ├── 📄 Login.jsx             User login page
+            ├── 📄 AdminUsers.jsx        User management page
+            └── 📄 AdminApprovalRules.jsx Approval rules config page
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              FILE DESCRIPTIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+📚 DOCUMENTATION FILES (Root Level)
+────────────────────────────────────────────────────────────────────────────────
+README.md                    Comprehensive project documentation with features,
+                            tech stack, API endpoints, and usage instructions
+
+QUICKSTART.md               Detailed step-by-step guide for first-time setup
+                            and usage with examples and troubleshooting
+
+SETUP_INSTRUCTIONS.txt      Quick reference guide with checklist format for
+                            rapid setup and verification
+
+PROJECT_SUMMARY.md          Complete feature list, statistics, file structure,
+                            and implementation details
+
+ARCHITECTURE.md             System architecture diagrams, data flow, component
+                            hierarchy, and technical design
+
+TESTING_GUIDE.md            Comprehensive manual testing checklist with 29+
+                            test cases and expected results
+
+FINAL_SUMMARY.md            Project delivery summary with metrics, highlights,
+                            and acceptance criteria
+
+FILE_TREE.txt               This file - visual project structure reference
+
+
+⚙️ BACKEND FILES
+────────────────────────────────────────────────────────────────────────────────
+app.js                      Express server setup with middleware, routes,
+                            CORS, and error handling
+
+package.json                Backend dependencies: express, cors, bcryptjs,
+                            jsonwebtoken, dotenv
+
+.env.example                Environment variables template (JWT_SECRET, PORT)
+
+data/store.js               In-memory storage with arrays for companies,
+                            users, and approval rules
+
+middleware/auth.js          JWT verification middleware and admin-only
+                            authorization check
+
+routes/auth.js              Signup and login endpoints with password hashing
+                            and JWT generation
+
+routes/users.js             User CRUD operations: create, list, update role,
+                            assign manager, resend password
+
+routes/approvalRules.js     Approval rules CRUD: create, update, list rules
+                            with validation
+
+
+🎨 FRONTEND FILES
+────────────────────────────────────────────────────────────────────────────────
+package.json                Frontend dependencies: react, react-router-dom,
+                            tailwindcss, react-scripts
+
+tailwind.config.js          TailwindCSS configuration for content paths and
+                            theme customization
+
+postcss.config.js           PostCSS configuration for Tailwind and Autoprefixer
+
+public/index.html           HTML template with root div for React mounting
+
+src/App.jsx                 Main app component with React Router setup and
+                            route definitions
+
+src/index.js                React entry point that renders App into root div
+
+src/index.css               Global styles with Tailwind directives
+
+src/context/AuthContext.jsx Authentication context with login, logout, and
+                            user state management
+
+src/components/
+  ProtectedRoute.jsx        Higher-order component for route protection with
+                            admin role check
+
+  Navbar.jsx                Navigation bar with user info, company name, and
+                            logout button
+
+src/pages/
+  Signup.jsx                Company signup form with country selection and
+                            currency auto-population
+
+  Login.jsx                 User login form with email/password authentication
+
+  AdminUsers.jsx            User management page with table, add user modal,
+                            inline editing, and password resend
+
+  AdminApprovalRules.jsx    Approval rules configuration with employee
+                            selection, approver management, and rule settings
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              QUICK NAVIGATION
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 TO START THE PROJECT:
+  1. cd backend && npm install && npm start
+  2. cd frontend && npm install && npm start
+
+📖 TO UNDERSTAND THE PROJECT:
+  1. Read README.md for overview
+  2. Read ARCHITECTURE.md for technical details
+  3. Read QUICKSTART.md for usage guide
+
+🧪 TO TEST THE PROJECT:
+  1. Follow TESTING_GUIDE.md
+  2. Use SETUP_INSTRUCTIONS.txt for checklist
+
+🔧 TO MODIFY THE PROJECT:
+  Backend Logic:    backend/routes/*.js
+  Frontend Pages:   frontend/src/pages/*.jsx
+  UI Components:    frontend/src/components/*.jsx
+  Data Storage:     backend/data/store.js
+  Authentication:   backend/middleware/auth.js
+  State Management: frontend/src/context/AuthContext.jsx
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              FILE STATISTICS
+═══════════════════════════════════════════════════════════════════════════════
+
+Total Files:              32+
+Documentation Files:      8
+Backend Files:            9
+Frontend Files:           16
+Configuration Files:      5
+
+Backend LOC:              ~1,200
+Frontend LOC:             ~1,300
+Total LOC:                ~2,500+
+
+API Endpoints:            9
+React Components:         6
+Pages:                    4
+Context Providers:        1
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              IMPORTANT NOTES
+═══════════════════════════════════════════════════════════════════════════════
+
+⚠️  DATA STORAGE
+    All data is stored IN-MEMORY in backend/data/store.js
+    Data will be LOST when the backend server restarts
+    This is intentional for development/demo purposes
+
+🔒 SECURITY
+    JWT secret is in .env file (copy from .env.example)
+    Passwords are hashed with bcrypt (10 salt rounds)
+    Protected routes require valid JWT token
+
+📧 EMAIL
+    Email notifications are STUBBED
+    Passwords are logged to backend console
+    Check terminal output when creating/resending passwords
+
+🌐 PORTS
+    Backend:  http://localhost:5000
+    Frontend: http://localhost:3000
+    Make sure these ports are available
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              KEY FEATURES
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Company Signup with Admin Creation
+✅ User Login with JWT Authentication
+✅ User Management (Add, Edit, Assign Manager)
+✅ Random Password Generation
+✅ Approval Rules Configuration
+✅ Protected Admin Routes
+✅ Modern Responsive UI
+✅ In-Memory Data Storage
+✅ Role-Based Access Control
+✅ Comprehensive Documentation
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                    🎉 PROJECT COMPLETE AND READY TO USE! 🎉
+
+═══════════════════════════════════════════════════════════════════════════════
