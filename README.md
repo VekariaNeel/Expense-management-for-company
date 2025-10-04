@@ -32,44 +32,6 @@ A full-stack expense management system with company signup, user management, and
 - **Context API** for state management
 - Protected routes with authentication
 
-## 📂 Project Structure
-
-```
-expense-management/
-├── backend/
-│   ├── app.js                    # Express server setup
-│   ├── package.json
-│   ├── .env.example
-│   ├── data/
-│   │   └── store.js              # In-memory data storage
-│   ├── middleware/
-│   │   └── auth.js               # JWT authentication middleware
-│   └── routes/
-│       ├── auth.js               # Signup & login routes
-│       ├── users.js              # User management routes
-│       └── approvalRules.js      # Approval rules routes
-│
-└── frontend/
-    ├── package.json
-    ├── tailwind.config.js
-    ├── public/
-    │   └── index.html
-    └── src/
-        ├── App.jsx
-        ├── index.js
-        ├── index.css
-        ├── context/
-        │   └── AuthContext.jsx   # Authentication context
-        ├── components/
-        │   ├── ProtectedRoute.jsx
-        │   └── Navbar.jsx
-        └── pages/
-            ├── Signup.jsx
-            ├── Login.jsx
-            ├── AdminUsers.jsx
-            └── AdminApprovalRules.jsx
-```
-
 ## 🚀 Getting Started
 
 ### Prerequisites
